@@ -22,7 +22,7 @@ func init() {
 	}
 }
 
-//hugo
+//hugo  http://gohugo.org/
 func main() {
 	//router()
 
