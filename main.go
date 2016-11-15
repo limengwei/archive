@@ -1,13 +1,18 @@
 package main
 
 import (
-	"bufio"
+	"crypto/md5"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -22,74 +27,69 @@ func init() {
 	}
 }
 
-//hugo  http://gohugo.org/
 func main() {
-	//router()
+	RunServer()
+}
 
-//	f, _ := os.Open("1111.txt")
+func RunServer() {
+	r := gin.Default()
 
-//	buf := bufio.NewReader(f)
+	r.LoadHTMLGlob("res/*.html")
+	r.Static("/static", "res/static")
+	r.Static("/archive", "archive")
 
-//	code, _ := buf.ReadString('\t')
+	r.GET("/list", PostList)
+	r.GET("/", EditorGet)
+	r.POST("/new", EditorPost)
+	r.PUT("/update", EditorPut)
 
-//	code = strings.TrimSpace(code)
-//	fmt.Println(code)
+	r.Run(":1024")
+}
 
-//	strconv.ParseInt("01001000", 2, 16)
+func PostList(c *gin.Context) {
+	list := getFileList("./archive")
+	fmt.Println(list)
+	c.HTML(http.StatusOK, "list.html", gin.H{"list": list})
+}
 
-	ReadLine("1111.txt" func(s string){
-		fmt.Println(s)
-	})
+func EditorGet(c *gin.Context) {
+	now := time.Now().Unix()
+	h := md5.New()
+	io.WriteString(h, strconv.FormatInt(now, 10))
+	token := fmt.Sprintf("%x", h.Sum(nil))
+
+	c.HTML(http.StatusOK, "editor.html", gin.H{"token": token})
+	http.SetCookie()
 
 }
 
-func ReadLine(fileName string, handler func(string)) error {
-	f, err := os.Open(fileName)
+func EditorPost(c *gin.Context) {
+
+	path, err := createArchiveDir()
 	if err != nil {
-		return err
+		fmt.Println("目录创建失败：", err)
+		return
 	}
-	buf := bufio.NewReader(f)
-	for {
-		line, err := buf.ReadString('\n')
-		line = strings.TrimSpace(line)
-		handler(line)
-		if err != nil {
-			if err == io.EOF {
-				return nil
-			}
-			return err
-		}
-	}
-	return nil
+
+	now := strconv.FormatInt(time.Now().Unix(), 10)
+	mdName := now + ".md"
+	htmlName := now + ".html"
+
+	New(c.Request.FormValue("md"), path+Joiner+mdName)
+	New(c.Request.FormValue("html"), path+Joiner+htmlName)
+
+	c.Redirect(http.StatusMovedPermanently, "/list")
 }
 
-func router() {
-
-	if len(os.Args) == 1 {
-		help()
-	} else if strings.EqualFold(os.Args[1], "new") {
-		New()
-	} else if strings.EqualFold(os.Args[1], "build") {
-		Build()
-	}
+func EditorPut(c *gin.Context) {
+	fmt.Println(c.Request.FormValue("html"))
+	fmt.Println(c.Request.FormValue("md"))
 }
 
-func help() {
-	fmt.Println(`
- archive command [arguments]
-
- new          :创建目录和index.md
- new fileName :创建目录和指定名字文件
- build        :更新文章列表
-	`)
-}
-
-func createDir() (path string, err error) {
-
+func createArchiveDir() (path string, err error) {
 	now := time.Now().Format("2006-01-02")
 	dirs := strings.Split(now, "-")
-	path, _ = os.Getwd()
-	fmt.Println("当前目录：", path)
+	path, _ = os.Getwd() //当前目录
 	path = path + Joiner + "archive"
 
 	for _, v := range dirs {
@@ -97,34 +97,21 @@ func createDir() (path string, err error) {
 		path = path + Joiner + v
 
 	}
-
 	err = os.MkdirAll(path, os.ModePerm)
-
 	return
 }
 
-func New() {
-	path, err := createDir()
-	if err != nil {
-		fmt.Println("目录创建失败：", err)
-		return
-	}
-	fmt.Println("目录创建成功")
-
-	fName := "index.md"
-
-	fPath := path + Joiner + fName
-
+func New(str string, fPath string) (err error) {
 	f, err := os.Open(fPath)
 
 	if err != nil && os.IsNotExist(err) {
-		f, err := os.Create(fPath)
+		f, err = os.Create(fPath)
 
 		if err != nil && os.IsNotExist(err) {
 			fmt.Println("文件创建失败：", err)
 		}
 
-		f.WriteString("#Title")
+		f.WriteString(str)
 		fmt.Println("文件创建成功")
 
 		defer f.Close()
@@ -134,22 +121,44 @@ func New() {
 
 	defer f.Close()
 
-}
-
-func Edit() {
-
+	return
 }
 
 func Build() {
-	getFileList("./archive")
+
+	list := getFileList("./archive")
+
+	os.MkdirAll("./data", os.ModePerm)
+
+	fPath := "./data/data.json"
+
+	f, err := os.Open(fPath)
+
+	if err != nil && os.IsNotExist(err) {
+		f, err = os.Create(fPath)
+
+		if err != nil && os.IsNotExist(err) {
+			fmt.Println("Data文件创建失败：", err)
+		}
+
+		fmt.Println("文件创建成功")
+
+	}
+
+	b, _ := json.Marshal(list)
+
+	_, err = f.WriteString(string(b))
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer f.Close()
+
 }
 
-//37439a79596609d0e0ab20ac37671fe7
-//bbbcea93dbda07a315c3e99c74af7f67
-//a87ff679a2f3e71d9181a67b7542122c
-//bdbf46a337ac08e6b4677c2826519542
-//adb79a4937b5a13851528d26525a4113
-func getFileList(path string) {
+func getFileList(path string) (list []string) {
+
 	err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
 
 		if f == nil {
@@ -158,12 +167,22 @@ func getFileList(path string) {
 		if f.IsDir() {
 			return nil
 		}
-		println(path)
+
+		path = strings.Replace(path, "\\", "/", -1)
+		list = append(list, path)
 		return nil
 
 	})
 
 	if err != nil {
 		fmt.Printf("filepath.Walk() returned %v\n", err)
+	}
+	return
+}
+
+func checkError(err error) {
+	if err != nil {
+		fmt.Println("Fatal error ", err.Error())
+		os.Exit(1)
 	}
 }

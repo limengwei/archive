@@ -1,0 +1,46 @@
+{{template "header" .}}
+{{template "navbar" .}}
+
+
+<div class="row" style="padding-top: 70px">
+		<div class="container center-block">
+				<!--
+				<ul class="nav nav-pills">
+				  <li role="presentation"><a href="/">最新</a></li>
+				  <li role="presentation"><a href="/art/android">Android</a></li>
+				  <li role="presentation"><a href="/art/golang">Golang</a></li>
+				</ul>
+				-->
+				<br>
+
+				<div class="col-sm-12">
+					<div class="panel panel-default">
+						<!--
+						<div class="panel-heading">
+						<h3>最新</h3>
+						</div>
+						-->
+						
+						<ul class="list-group">
+						{{range $item:=.list}}
+						
+						<li class="list-group-item title"><a href="{{$item}}">{{$item}}</a></li>
+						
+						{{end}}
+
+						</ul>
+					</div>
+			
+					<nav>
+					  <ul class="pager">
+						
+   						<li><a href="?p={{.l}}">上一页</a></li>
+	
+					    <li><a href="?p={{.r}}">下一页</a></li>
+					  </ul>
+					</nav>
+	
+				</div>
+			</div>
+		</div>
+	</div>
