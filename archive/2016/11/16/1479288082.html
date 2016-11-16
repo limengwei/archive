@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <link href="http://www.yinwang.org/main.css" rel="stylesheet" type="text/css">
+        <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+        <link rel="shortcut icon" href="http://www.yinwang.org/images/Yc.jpg">
+        <title>Gin Web Framework</title>
+    </head>
+	
+    <body>
+        <div style="margin: 2% 5% 2% 5%">
+            <div style="width=60%;padding: 2% 8% 5% 8%; border: 1px solid LightGrey;">
+                <h2>titleee</h2>
+				<p>
+                 	<h1 id="h1-gin-web-framework"><a name="Gin Web Framework" class="reference-link"></a><span class="header-link octicon octicon-link"></span>Gin Web Framework</h1><p>&lt;img align=&quot;right&quot; src=&quot;https://raw.githubusercontent.com/gin-gonic/gin/master/logo.jpg&quot;&gt;<br><a href="https://travis-ci.org/gin-gonic/gin"><img src="https://travis-ci.org/gin-gonic/gin.svg" alt="Build Status"></a><br><a href="https://coveralls.io/r/gin-gonic/gin?branch=master"><img src="https://coveralls.io/repos/gin-gonic/gin/badge.svg?branch=master" alt="Coverage Status"></a><br><a href="https://goreportcard.com/report/github.com/gin-gonic/gin"><img src="https://goreportcard.com/badge/github.com/gin-gonic/gin" alt="Go Report Card"></a><br><a href="https://godoc.org/github.com/gin-gonic/gin"><img src="https://godoc.org/github.com/gin-gonic/gin?status.svg" alt="GoDoc"></a><br><a href="https://gitter.im/gin-gonic/gin?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="Join the chat at https://gitter.im/gin-gonic/gin"></a></p>
+<p>Gin is a web framework written in Go (Golang). It features a martini-like API with much better performance, up to 40 times faster thanks to <a href="https://github.com/julienschmidt/httprouter">httprouter</a>. If you need performance and good productivity, you will love Gin.</p>
+<p><img src="https://gin-gonic.github.io/gin/other/console.png" alt="Gin console logger"></p>
+<pre><code class="lang-sh">$ cat test.go
+</code></pre>
+<pre><code class="lang-go">package main
+
+import &quot;github.com/gin-gonic/gin&quot;
+
+func main() {
+    r := gin.Default()
+    r.GET(&quot;/ping&quot;, func(c *gin.Context) {
+        c.JSON(200, gin.H{
+            &quot;message&quot;: &quot;pong&quot;,
+        })
+    })
+    r.Run() // listen and server on 0.0.0.0:8080
+}
+</code></pre>
+
+				</p>
+            </div>
+        </div>
+    </body>
+</html>
