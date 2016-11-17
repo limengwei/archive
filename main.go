@@ -18,15 +18,36 @@ import (
 )
 
 var (
-	Joiner = "\\"
+	Joiner   = "\\"
+	DataPath = "data/data.json"
+	posts    []Post
 )
 
 func init() {
+
 	if os.IsPathSeparator('\\') {
 		Joiner = "\\"
 	} else {
 		Joiner = "/"
 	}
+	os.MkdirAll("archive", os.ModePerm)
+	os.MkdirAll("data", os.ModePerm)
+	os.MkdirAll("public", os.ModePerm)
+
+	f, e := os.Open(DataPath)
+	if e != nil && os.IsNotExist(e) {
+		f, e = os.Create(DataPath)
+		if e != nil {
+			fmt.Println(e)
+		}
+	} else {
+		b, _ := ioutil.ReadAll(f)
+
+		json.Unmarshal(b, posts)
+
+	}
+	defer f.Close()
+
 }
 
 func main() {
@@ -134,26 +155,36 @@ type Post struct {
 func NewPost(c *gin.Context, fPath string) (err error) {
 	NewFile("", fPath)
 
-	f, err := os.OpenFile(fPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)
+	f, err := os.OpenFile(fPath, os.O_RDWR, os.ModePerm)
 	if err != nil {
 		return
 	}
 	defer f.Close()
 
 	t, err := template.ParseFiles("tpl/detail.html")
-	m := make(map[string]interface{})
+	m := make(map[string]string)
 	m["title"] = c.Request.FormValue("title")
-	m["content"] = template.HTML(c.Request.FormValue("html"))
+	//	m["content"] = template.HTML(c.Request.FormValue("html"))
+	m["content"] = c.Request.FormValue("html")
 	err = t.Execute(f, m)
 
-	//TODO 读写json文件
-	var posts []Post
-	data, _ := os.OpenFile("data/data.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)
-	b, _ := ioutil.ReadAll(data)
-	fmt.Println(string(b))
-	fmt.Println(json.Unmarshal(b, &posts))
-	data.Close()
+	//TODO
+	data, _ := os.OpenFile("data/data.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	defer data.Close()
 
+	curr, _ := os.Getwd()
+	fPath, _ = filepath.Rel(curr, fPath)
+	fPath = strings.Replace(fPath, "\\", "/", -1)
+
+	var post Post
+	post.Title = m["title"]
+	post.Time = time.Now().Format("2006-01-02 15:04:05")
+	post.Html = fPath
+
+	posts = append(posts, post)
+
+	b, _ := json.Marshal(posts)
+	data.Write(b)
 	return
 }
 
